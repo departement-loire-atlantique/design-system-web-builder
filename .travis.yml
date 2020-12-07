@@ -14,14 +14,13 @@
 #   (auto add the line openssl aes-256-cbc -K $encrypted_d68160cf0aa5_key -iv $encrypted_d68160cf0aa5_iv -in deploy_rsa.enc -out deploy_rsa -d)
 # 
 # Copy the public key onto the remote SSH server
-# ssh-copy-id -i deploy_rsa.pub loireatl-ds@ssh.cluster011.hosting.ovh.net
 # ssh-copy-id -i deploy_rsa.pub loireatl-devds@ssh.cluster011.hosting.ovh.net
 # 
 # Remove the key from your computer
 # rm -f deploy_rsa deploy_rsa.pub
 # 
 # Add the key to github
-# git add deploy_rsa.enc
+# git add deploy_rsa.gpg
 # 
 env:
   global:
