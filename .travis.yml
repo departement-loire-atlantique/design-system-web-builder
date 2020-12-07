@@ -50,3 +50,5 @@ deploy:
   - provider: script
     skip_cleanup: true
     script: rsync -r --delete-after --quiet --exclude .ssh $TRAVIS_BUILD_DIR/design-system-web/dist/ loireatl-devds@ssh.cluster011.hosting.ovh.net:/home/loireatl-devds/
+    on:
+      branch: main
