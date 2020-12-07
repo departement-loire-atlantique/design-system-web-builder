@@ -1,0 +1,59 @@
+# How to generate to valid deploy_rsa.enc file ?
+#
+# Generate a dedicated SSH key :
+# ssh-keygen -t rsa -b 4096 -C 'build@travis-ci.org' -f ./deploy_rsa
+# 
+# Encrypt the private key and add $encrypted_xxx_key and $encrypted_xxx_key to the env
+# travis login --org
+# sous windows (gitbash):
+# - travis encrypt key_password=exemplepassword
+# - gpg -c deploy_rsa
+# - Then add secure env variable and "echo $key_password | gpg --passphrase-fd 0 deploy_rsa.gpg" to the defore-reploy
+# sous Linux : 
+# - travis encrypt-file deploy_rsa -p --add
+#   (auto add the line openssl aes-256-cbc -K $encrypted_d68160cf0aa5_key -iv $encrypted_d68160cf0aa5_iv -in deploy_rsa.enc -out deploy_rsa -d)
+# 
+# Copy the public key onto the remote SSH server
+# ssh-copy-id -i deploy_rsa.pub loireatl-ds@ssh.cluster011.hosting.ovh.net
+# ssh-copy-id -i deploy_rsa.pub loireatl-devds@ssh.cluster011.hosting.ovh.net
+# 
+# Remove the key from your computer
+# rm -f deploy_rsa deploy_rsa.pub
+# 
+# Add the key to github
+# git add deploy_rsa.enc
+# 
+env:
+  global:
+    secure: "KQzYF5yYIXkH8oZASlowyIAi3tBhyNlQ1Qk53/nhrI/RniM1iThSK7Adkq5po3jtizZfdS/nmc5BcDK7VeeQHS+uUHhd8d+1gABTTHAwndGSO5vRJ/Sr16khC2aLV4paqynPBvQPSEG4ALJuUQepMF2zjLd2wZcTOqNmIVRMVv/MpawTEUrj7TYVh3HaZExfCHeI4Ut/9qpNMX/uUDiSWf6ucyg8OS5CPQqLGtTudNH2Poj/bfAi1d2vIXg+wLFpmt4FApzQLgCTsGa80rf88stdjx64L/tRN6ul0A6yajynOEr4Ta54RYYQQC+Zx0Sh7KKpmB6yrRCSR/Tiz5MBMr8TOXakZ0sdNOKD/jVhkJh2lsSauZFr7cME7146Xea8QtvBYW2myeJ8cdMYM9aVL9Qtau7fsIadE9oOB4+RSOEyfjpXu47O8HUIAJ6pHJVYSIbiB8G3HnyrpUUg9dr7+PuS27wxb5dOZFUsSXS+JDvNnmvhi/2yJXf2oM8qmpimZM2F/+cPax7l94OsbnmysUt4knzLVJ0C8uL9t0UIFxdKT9kkYnzx9f7G/I7GbF9p5GHg6dAkq93hyR6mV0Ouxe4tDEg9rgcwJzWt5AN31tny8mAM8AG9aBLTtbz7UFfchbP1HzaS66CZqcDNvsCGfOj1vrvtzjheX1f4VfoTwDI="
+
+addons:
+  ssh_known_hosts: ssh.cluster011.hosting.ovh.net
+  
+install:
+  - npm install -g gulp-cli
+  - npm install
+  - git clone https://github.com/departement-loire-atlantique/design-system-web.git
+
+script: 
+  - cd $TRAVIS_BUILD_DIR/design-system-web
+  - gulp build
+
+# Unlock private key
+before_deploy:
+  - echo $key_password | gpg --passphrase-fd 0 deploy_rsa.gpg
+  - eval "$(ssh-agent -s)"
+  - chmod 600 deploy_rsa
+  - ssh-add deploy_rsa
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: rsync -r --delete-after --quiet --exclude .ssh $TRAVIS_BUILD_DIR/design-system-web/dist/ loireatl-ds@ssh.cluster011.hosting.ovh.net:/home/loireatl-ds/
+    on:
+      branch: master
+  - provider: script
+    skip_cleanup: true
+    script: rsync -r --delete-after --quiet --exclude .ssh $TRAVIS_BUILD_DIR/design-system-web/dist/ loireatl-devds@ssh.cluster011.hosting.ovh.net:/home/loireatl-devds/
+    on:
+      branch: recette
