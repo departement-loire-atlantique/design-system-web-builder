@@ -40,6 +40,7 @@ script:
 
 # Unlock private key
 before_deploy:
+  - cd $TRAVIS_BUILD_DIR
   - echo $key_password | gpg --passphrase-fd 0 deploy_rsa.gpg
   - eval "$(ssh-agent -s)"
   - chmod 600 deploy_rsa
