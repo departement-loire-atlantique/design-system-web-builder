@@ -31,12 +31,12 @@ addons:
   ssh_known_hosts: ssh.cluster011.hosting.ovh.net
   
 install:
-  - npm install -g gulp-cli
-  - npm install
   - git clone https://github.com/departement-loire-atlantique/design-system-web.git
+  - cd $TRAVIS_BUILD_DIR/design-system-web
+  - npm install -g gulp-cli
+  - npm install 
 
 script: 
-  - cd $TRAVIS_BUILD_DIR/design-system-web
   - gulp build
 
 # Unlock private key
